@@ -34,6 +34,7 @@
 			this.comboBoxCaptureResolution = new System.Windows.Forms.ComboBox();
 			this.pictureBox = new AForge.Controls.PictureBox();
 			this.buttonSample = new System.Windows.Forms.Button();
+			this.buttonDebug = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -94,11 +95,22 @@
 			this.buttonSample.UseVisualStyleBackColor = true;
 			this.buttonSample.Click += new System.EventHandler(this.buttonSample_Click);
 			// 
+			// buttonDebug
+			// 
+			this.buttonDebug.Location = new System.Drawing.Point(411, 280);
+			this.buttonDebug.Name = "buttonDebug";
+			this.buttonDebug.Size = new System.Drawing.Size(75, 23);
+			this.buttonDebug.TabIndex = 8;
+			this.buttonDebug.Text = "Debug";
+			this.buttonDebug.UseVisualStyleBackColor = true;
+			this.buttonDebug.Click += new System.EventHandler(this.buttonDebug_Click);
+			// 
 			// FormMain
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(1333, 467);
+			this.ClientSize = new System.Drawing.Size(1153, 376);
+			this.Controls.Add(this.buttonDebug);
 			this.Controls.Add(this.buttonSample);
 			this.Controls.Add(this.pictureBox);
 			this.Controls.Add(this.comboBoxCaptureResolution);
@@ -108,6 +120,7 @@
 			this.Name = "FormMain";
 			this.Text = "Meepo";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMain_FormClosing);
+			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormMain_FormClosed);
 			this.Load += new System.EventHandler(this.FormMain_Load);
 			((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
 			this.ResumeLayout(false);
@@ -122,6 +135,7 @@
 		private System.Windows.Forms.ComboBox comboBoxCaptureResolution;
 		private AForge.Controls.PictureBox pictureBox;
 		private System.Windows.Forms.Button buttonSample;
+		private System.Windows.Forms.Button buttonDebug;
 	}
 }
 

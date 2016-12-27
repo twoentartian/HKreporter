@@ -46,3 +46,4 @@ D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\bin\Debug\AForge.
 D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\bin\Debug\AForge.Vision.xml
 D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\obj\Debug\WinForm_TDPS_2016_Test.csprojResolveAssemblyReference.cache
 D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\obj\Debug\WinForm_TDPS_2016_Test.FormMain.resources
+D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\obj\Debug\WinForm_TDPS_2016_Test.ZedGraphForm.resources

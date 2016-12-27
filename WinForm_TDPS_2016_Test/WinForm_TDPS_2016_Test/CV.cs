@@ -4,23 +4,90 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net.Mime;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
+using WinForm_TDPS_2016_Test_FFT;
 
 namespace WinForm_TDPS_2016_Test
 {
+	class DetectResult
+	{
+		public readonly Image TriangleImage;
+		public readonly List<Triangle2DF> TriangleList;
+
+		public readonly Image RectangleImage;
+		public readonly List<RotatedRect> BoxList;
+
+		public readonly Image CircleImage;
+		public readonly CircleF[] Circles;
+
+		public readonly Image LineImage;
+		public readonly LineSegment2D[] Line;
+
+		public readonly string Msg;
+
+		public DetectResult(Image<Bgr, Byte> argImg, List<Triangle2DF> argTriangleLis, List<RotatedRect> argBoxList, CircleF[] argCircles, LineSegment2D[] argLines, string argMsg)
+		{
+			TriangleList = argTriangleLis;
+			Image<Bgr, Byte> _triangleImage = argImg.CopyBlank();
+			foreach (Triangle2DF triangle in argTriangleLis)
+				_triangleImage.Draw(triangle, new Bgr(Color.DarkBlue), 2);
+			TriangleImage = _triangleImage.Bitmap;
+
+			BoxList = argBoxList;
+			Image<Bgr, Byte> _rectangleImage = argImg.CopyBlank();
+			foreach (RotatedRect box in argBoxList)
+				_rectangleImage.Draw(box, new Bgr(Color.DarkOrange), 2);
+			RectangleImage = _rectangleImage.Bitmap;
+
+			if (argCircles != null)
+			{
+				Circles = argCircles;
+				Image<Bgr, Byte> _circleImage = argImg.CopyBlank();
+				foreach (CircleF circle in argCircles)
+					_circleImage.Draw(circle, new Bgr(Color.Brown), 2);
+				CircleImage = _circleImage.Bitmap;
+			}
+			else
+			{
+				Circles = null;
+				CircleImage = argImg.CopyBlank().Bitmap;
+			}
+
+			Line = argLines;
+			Image<Bgr, Byte> _lineImage = argImg.CopyBlank();
+			foreach (LineSegment2D line in argLines)
+				_lineImage.Draw(line, new Bgr(Color.Green), 2);
+			LineImage = _lineImage.Bitmap;
+
+			Msg = argMsg;
+		}
+	}
+
+	class TextureAnalysisResult
+	{
+		public TextureAnalysisResult(byte[,,] argBytes)
+		{
+			LbpFactor = argBytes;
+			img = new Image<Gray, byte>(argBytes);
+		}
+		public Image<Gray, byte> img;
+		public byte[,,] LbpFactor;
+	}
+
 	static class CV
 	{
-		//TODO: IMPROVE
-		public static Image triangleRectangleImage;
-		public static Image circleImage;
-		public static Image lineImage;
+		public enum DetectMode
+		{
+			NoCircle, includeCircle
+		}
 
-		public static void Detcet(string argPath)
+		public static DetectResult Detect(string argPath, DetectMode argDetectMode)
 		{
 			StringBuilder msgBuilder = new StringBuilder("Performance: ");
 
@@ -39,13 +106,19 @@ namespace WinForm_TDPS_2016_Test
 			//Image<Gray, Byte> gray = img.Convert<Gray, Byte>().PyrDown().PyrUp();
 
 			#region circle detection
-			Stopwatch watch = Stopwatch.StartNew();
-			double cannyThreshold = 180.0;
-			double circleAccumulatorThreshold = 120;
-			CircleF[] circles = CvInvoke.HoughCircles(uimage, HoughType.Gradient, 2.0, 20.0, cannyThreshold, circleAccumulatorThreshold, 5);
 
-			watch.Stop();
-			msgBuilder.Append(String.Format("Hough circles - {0} ms; ", watch.ElapsedMilliseconds));
+			CircleF[] circles = null;
+			Stopwatch watch = new Stopwatch();
+			double cannyThreshold = 180.0;
+			if (argDetectMode == DetectMode.includeCircle)
+			{
+				watch = Stopwatch.StartNew();
+				double circleAccumulatorThreshold = 120;
+				circles = CvInvoke.HoughCircles(uimage, HoughType.Gradient, 2.0, 20.0, cannyThreshold, circleAccumulatorThreshold, 5);
+
+				watch.Stop();
+				msgBuilder.Append(String.Format("Hough circles - {0} ms; ", watch.ElapsedMilliseconds));
+			}
 			#endregion
 
 			#region Canny and edge detection
@@ -116,31 +189,55 @@ namespace WinForm_TDPS_2016_Test
 			msgBuilder.Append(String.Format("Triangles & Rectangles - {0} ms; ", watch.ElapsedMilliseconds));
 			#endregion
 
-			#region draw triangles and rectangles
-			Image<Bgr, Byte> _triangleRectangleImage = img.CopyBlank();
-			foreach (Triangle2DF triangle in triangleList)
-				_triangleRectangleImage.Draw(triangle, new Bgr(Color.DarkBlue), 2);
-			foreach (RotatedRect box in boxList)
-				_triangleRectangleImage.Draw(box, new Bgr(Color.DarkOrange), 2);
-			triangleRectangleImage = _triangleRectangleImage.Bitmap;
-			#endregion
-
-			#region draw circles
-			Image<Bgr, Byte> _circleImage = img.CopyBlank();
-			foreach (CircleF circle in circles)
-				_circleImage.Draw(circle, new Bgr(Color.Brown), 2);
-			circleImage = _circleImage.Bitmap;
-			#endregion
-
-			#region draw lines
-			Image<Bgr, Byte> _lineImage = img.CopyBlank();
-			foreach (LineSegment2D line in lines)
-				_lineImage.Draw(line, new Bgr(Color.Green), 2);
-			lineImage = _lineImage.Bitmap;
-
-			#endregion
+			return new DetectResult(img,triangleList,boxList,circles,lines,msgBuilder.ToString());
 		}
-		
 
+		private static int LbpComparer(Byte center, Byte target)
+		{
+			if (center > target)
+			{
+				return 0;
+			}
+			else
+			{
+				return 1;
+			}
+		}
+
+		public static TextureAnalysisResult TextureAnalysis(string argPath)
+		{
+			Image<Gray, Byte> img = new Image<Gray, byte>(argPath);
+			byte[,,] rawImgData = img.Data;
+			byte[,,] outputResult = new byte[img.Height - 2, img.Width - 2, 1];
+			//LBP
+			for (int yLoc = 1; yLoc < img.Height - 1; yLoc++)
+			{
+				for (int xLoc = 1; xLoc < img.Width - 1; xLoc++)
+				{
+					int[] temp = new int[8];
+					temp[0] = LbpComparer(rawImgData[yLoc, xLoc, 0], rawImgData[yLoc - 1, xLoc - 1, 0]);
+					temp[1] = LbpComparer(rawImgData[yLoc, xLoc, 0], rawImgData[yLoc - 1, xLoc, 0]);
+					temp[2] = LbpComparer(rawImgData[yLoc, xLoc, 0], rawImgData[yLoc - 1, xLoc + 1, 0]);
+					temp[3] = LbpComparer(rawImgData[yLoc, xLoc, 0], rawImgData[yLoc, xLoc + 1, 0]);
+					temp[4] = LbpComparer(rawImgData[yLoc, xLoc, 0], rawImgData[yLoc + 1, xLoc + 1, 0]);
+					temp[5] = LbpComparer(rawImgData[yLoc, xLoc, 0], rawImgData[yLoc + 1, xLoc, 0]);
+					temp[6] = LbpComparer(rawImgData[yLoc, xLoc, 0], rawImgData[yLoc + 1, xLoc - 1, 0]);
+					temp[7] = LbpComparer(rawImgData[yLoc, xLoc, 0], rawImgData[yLoc, xLoc - 1, 0]);
+
+					int power = 1;
+					outputResult[yLoc - 1, xLoc - 1, 0] = 0;
+					for (int i = 0; i < temp.Length; i++)
+					{
+						if (power * temp[i] > 255)
+						{
+							throw new LogicErrorException();
+						}
+						outputResult[yLoc - 1, xLoc - 1, 0] += (byte) (power*temp[i]);
+						power = power*2;
+					}
+				}
+			}
+			return new TextureAnalysisResult(outputResult);
+		}
 	}
 }

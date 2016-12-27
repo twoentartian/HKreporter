@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,20 +24,25 @@ namespace WinForm_TDPS_2016_Test
 		private TempFileManager tempFileManager;
 
 		#region Singleton
+
 		protected FormMain()
 		{
 			InitializeComponent();
 			stateManager = StateManager.GetInstance();
 			tempFileManager = TempFileManager.GetInstance();
 		}
+
 		public static FormMain GetInstance()
 		{
 			return _instance ?? (_instance = new FormMain());
 		}
+
 		private static FormMain _instance;
+
 		#endregion
 
 		#region Func
+
 		public Button GetButton_BeginEnd()
 		{
 			return buttonBeginEnd;
@@ -62,9 +68,15 @@ namespace WinForm_TDPS_2016_Test
 			return comboBoxCaptureResolution;
 		}
 
+		public AForge.Controls.PictureBox GetPictureBox()
+		{
+			return pictureBox;
+		}
+
 		#endregion
 
 		#region Form
+
 		private void FormMain_Load(object sender, EventArgs e)
 		{
 			stateManager.Init();
@@ -74,6 +86,12 @@ namespace WinForm_TDPS_2016_Test
 		private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			tempFileManager.ReleasePageFile();
+		}
+
+		private void FormMain_FormClosed(object sender, FormClosedEventArgs e)
+		{
+			Environment.Exit(0);
+
 		}
 		#endregion
 
@@ -98,8 +116,28 @@ namespace WinForm_TDPS_2016_Test
 		{
 			Image tempImage = videoSourcePlayer.GetCurrentVideoFrame();
 			string tempPath = tempFileManager.AddTempFile(tempImage);
-			CV.Detcet(tempPath);
-			pictureBox.Image = CV.lineImage;
+			TextureAnalysisResult result = CV.TextureAnalysis(tempPath);
+			pictureBox.Image = result.img.Resize(pictureBox.Width, pictureBox.Height, Inter.Linear, true).Bitmap;
+		}
+
+		private void buttonDebug_Click(object sender, EventArgs e)
+		{
+			string debugPath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "DEBUG" + Path.DirectorySeparatorChar + "DEBUG.jpg";
+			TextureAnalysisResult result = CV.TextureAnalysis(debugPath);
+			pictureBox.Image = result.img.Resize(pictureBox.Width, pictureBox.Height, Inter.Linear, true).Bitmap;
+
+			double[,] xLocData = new double[1,result.LbpFactor.GetLength(1)];
+			for (int xLoc = 0; xLoc < result.LbpFactor.GetLength(1); xLoc++)
+			{
+				xLocData[0,xLoc] = 0;
+				for (int yLoc = 0; yLoc < result.LbpFactor.GetLength(0); yLoc++)
+				{
+					xLocData[0,xLoc] += (double) result.LbpFactor[yLoc, xLoc, 0]/256;
+				}
+			}
+
+			ZedGraphForm graph = new ZedGraphForm(xLocData);
+			graph.Show();
 		}
 		#endregion
 
@@ -108,8 +146,6 @@ namespace WinForm_TDPS_2016_Test
 		{
 			VideoSourceDevice.UpdateResolution();
 		}
-
-
 		#endregion
 	}
 }
