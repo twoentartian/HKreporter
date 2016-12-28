@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Net.Mime;
+using System.Net.NetworkInformation;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,10 +12,23 @@ using Emgu.CV;
 using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
+using OpenTK.Graphics.OpenGL;
 using WinForm_TDPS_2016_Test_FFT;
 
 namespace WinForm_TDPS_2016_Test
 {
+	#region CV Results
+	class TextureAnalysisResult
+	{
+		public TextureAnalysisResult(byte[,,] argBytes)
+		{
+			LbpFactor = argBytes;
+			img = new Image<Gray, byte>(argBytes);
+		}
+		public readonly Image<Gray, byte> img;
+		public readonly byte[,,] LbpFactor;
+	}
+
 	class DetectResult
 	{
 		public readonly Image TriangleImage;
@@ -69,24 +83,91 @@ namespace WinForm_TDPS_2016_Test
 		}
 	}
 
-	class TextureAnalysisResult
+	class FindCuttingPointResult
 	{
-		public TextureAnalysisResult(byte[,,] argBytes)
+		public FindCuttingPointResult(double[,] argGrayCounter, List<int> argEdges, int argAccuracy)
 		{
-			LbpFactor = argBytes;
-			img = new Image<Gray, byte>(argBytes);
+			GrayCounter = argGrayCounter;
+			Edges = argEdges;
+			Accuracy = argAccuracy;
 		}
-		public Image<Gray, byte> img;
-		public byte[,,] LbpFactor;
+
+		public FindCuttingPointResult(List<int> argEdges, int argAccuracy)
+		{
+			Edges = argEdges;
+			Accuracy = argAccuracy;
+		}
+
+		public FindCuttingPointResult(List<double[]> argGrayCounterList)
+		{
+			GrayCounterList = argGrayCounterList;
+		}
+
+		public readonly double[,] GrayCounter;
+
+		public readonly List<int> Edges;
+
+		public readonly int Accuracy;
+
+		public readonly List<double[]> GrayCounterList;
 	}
+	#endregion
+
+
 
 	static class CV
 	{
+		#region CV Arguements
+
 		public enum DetectMode
 		{
-			NoCircle, includeCircle
+			NoCircle,
+			includeCircle
 		}
 
+		private static readonly int ThresholdAveGrayCounter = 50;
+		private static readonly int AccurateLevel = 40;
+		private static readonly double CuttingEdgeFactor = 3; //Determine the threshold of edge
+		private static readonly double EdgeMin = 0.25;
+		private static readonly double EdgeMax = 0.75;
+		#endregion
+
+		#region Func
+		private static int LbpComparer(Byte center, Byte target)
+		{
+			if (center > target)
+			{
+				return 0;
+			}
+			else
+			{
+				return 1;
+			}
+		}
+
+		private static List<int> FindCutting(double[] input)
+		{
+			List<int> output = new List<int>();
+			double[] slope = new double[input.Length - 1];
+			double ave = 0;
+			for (int i = 0; i < input.Length - 1; i++)
+			{
+				slope[i] = Math.Abs(input[i + 1] - input[i]);
+				ave += slope[i];
+			}
+			ave = ave / slope.Length;
+			for (int i = 0; i < slope.Length - 1; i++)
+			{
+				if (slope[i] > CuttingEdgeFactor * ave)
+				{
+					output.Add(i);
+				}
+			}
+			return output;
+		}
+		#endregion
+
+		#region Static CV Functions
 		public static DetectResult Detect(string argPath, DetectMode argDetectMode)
 		{
 			StringBuilder msgBuilder = new StringBuilder("Performance: ");
@@ -189,19 +270,7 @@ namespace WinForm_TDPS_2016_Test
 			msgBuilder.Append(String.Format("Triangles & Rectangles - {0} ms; ", watch.ElapsedMilliseconds));
 			#endregion
 
-			return new DetectResult(img,triangleList,boxList,circles,lines,msgBuilder.ToString());
-		}
-
-		private static int LbpComparer(Byte center, Byte target)
-		{
-			if (center > target)
-			{
-				return 0;
-			}
-			else
-			{
-				return 1;
-			}
+			return new DetectResult(img, triangleList, boxList, circles, lines, msgBuilder.ToString());
 		}
 
 		public static TextureAnalysisResult TextureAnalysis(string argPath)
@@ -232,12 +301,96 @@ namespace WinForm_TDPS_2016_Test
 						{
 							throw new LogicErrorException();
 						}
-						outputResult[yLoc - 1, xLoc - 1, 0] += (byte) (power*temp[i]);
-						power = power*2;
+						outputResult[yLoc - 1, xLoc - 1, 0] += (byte)(power * temp[i]);
+						power = power * 2;
 					}
 				}
 			}
 			return new TextureAnalysisResult(outputResult);
 		}
+
+		public static FindCuttingPointResult FindCuttingPoint(TextureAnalysisResult argTextureAnalysisResult)
+		{
+			double[,] grayCounter = new double[Byte.MaxValue + 1, argTextureAnalysisResult.LbpFactor.GetLength(1)];
+			for (int xLoc = 0; xLoc < argTextureAnalysisResult.LbpFactor.GetLength(1); xLoc++)
+			{
+				for (int yLoc = 0; yLoc < argTextureAnalysisResult.LbpFactor.GetLength(0); yLoc++)
+				{
+					grayCounter[argTextureAnalysisResult.LbpFactor[yLoc, xLoc, 0], xLoc]++;
+				}
+			}
+
+			List<double[]> smoothGrayCounterList = new List<double[]>();
+			double[,] smoothGrayCounter = new double[Byte.MaxValue + 1, AccurateLevel];
+			for (int tempGray = 0; tempGray < grayCounter.GetLength(0); tempGray++)
+			{
+				double ave = 0;
+				for (int xLoc = 0; xLoc < grayCounter.GetLength(1); xLoc++)
+				{
+					ave += grayCounter[tempGray, xLoc];
+				}
+				ave = ave / grayCounter.GetLength(1);
+				if (ave < ThresholdAveGrayCounter)
+				{
+					continue;
+				}
+
+				double[] grayCounterForList = new double[AccurateLevel];
+				double[] max = new double[AccurateLevel];
+				double[] min = new double[AccurateLevel];
+				for (int accurateStep = 0; accurateStep < AccurateLevel; accurateStep++)
+				{
+					max[accurateStep] = grayCounter[tempGray, 0];
+					min[accurateStep] = grayCounter[tempGray, 0];
+					int startPoint = accurateStep * grayCounter.GetLength(1) / AccurateLevel;
+					int endPoint = (accurateStep + 1) * grayCounter.GetLength(1) / AccurateLevel;
+					for (int point = startPoint; point < endPoint; point++)
+					{
+						if (grayCounter[tempGray, point] > max[accurateStep])
+						{
+							max[accurateStep] = grayCounter[tempGray, point];
+						}
+						else if (grayCounter[tempGray, point] < min[accurateStep])
+						{
+							min[accurateStep] = grayCounter[tempGray, point];
+						}
+						else
+						{
+							
+						}
+					}
+					grayCounterForList[accurateStep] = max[accurateStep] + min[accurateStep];
+				}
+				smoothGrayCounterList.Add(grayCounterForList);
+			}
+			List<int> edges = new List<int>();
+			for (int i = 0; i < smoothGrayCounterList.Count; i++)
+			{
+				List<int> resultList = FindCutting(smoothGrayCounterList[i]);
+				foreach (var singleResult in resultList)
+				{
+					if (singleResult > AccurateLevel * EdgeMin && singleResult < AccurateLevel * EdgeMax)
+					{
+						bool sameSign = false;
+						foreach (var singleEdge in edges)
+						{
+							if (singleEdge == singleResult)
+							{
+								sameSign = true;
+								break;
+							}
+						}
+						if (!sameSign)
+						{
+							edges.Add(singleResult);
+						}
+					}
+				}
+			}
+
+			return new FindCuttingPointResult(edges, AccurateLevel);
+		}
+		#endregion
+
 	}
 }

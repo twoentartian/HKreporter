@@ -86,11 +86,11 @@ namespace WinForm_TDPS_2016_Test
 		private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			tempFileManager.ReleasePageFile();
+			VideoSourceDevice.End();
 		}
 
 		private void FormMain_FormClosed(object sender, FormClosedEventArgs e)
 		{
-			Environment.Exit(0);
 
 		}
 		#endregion
@@ -116,28 +116,43 @@ namespace WinForm_TDPS_2016_Test
 		{
 			Image tempImage = videoSourcePlayer.GetCurrentVideoFrame();
 			string tempPath = tempFileManager.AddTempFile(tempImage);
-			TextureAnalysisResult result = CV.TextureAnalysis(tempPath);
-			pictureBox.Image = result.img.Resize(pictureBox.Width, pictureBox.Height, Inter.Linear, true).Bitmap;
+			TextureAnalysisResult textureResult = CV.TextureAnalysis(tempPath);
+			FindCuttingPointResult cuttingPointResult = CV.FindCuttingPoint(textureResult);
+			Bitmap resultImage = textureResult.img.Resize(pictureBox.Width, pictureBox.Height, Inter.Linear, true).Bitmap;
+
+			Bitmap newBitmap = new Bitmap(resultImage.Width, resultImage.Height);
+			Graphics g = Graphics.FromImage(newBitmap);
+			g.DrawImage(resultImage, 0, 0);
+			float FontSize = 20;
+			for (int i = 0; i < cuttingPointResult.Edges.Count; i++)
+			{
+				float location = (float)cuttingPointResult.Edges[i] / cuttingPointResult.Accuracy * newBitmap.Width;
+				g.DrawLine(new Pen(Color.DarkTurquoise, 4), location, 0 * newBitmap.Height, location, 1 * newBitmap.Height);
+			}
+			g.Dispose();
+
+			pictureBox.Image = newBitmap;
 		}
 
 		private void buttonDebug_Click(object sender, EventArgs e)
 		{
-			string debugPath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "DEBUG" + Path.DirectorySeparatorChar + "DEBUG.jpg";
-			TextureAnalysisResult result = CV.TextureAnalysis(debugPath);
-			pictureBox.Image = result.img.Resize(pictureBox.Width, pictureBox.Height, Inter.Linear, true).Bitmap;
+			string debugPath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "DEBUG" + Path.DirectorySeparatorChar + "DEBUG1.jpg";
+			TextureAnalysisResult textureResult = CV.TextureAnalysis(debugPath);
+			FindCuttingPointResult cuttingPointResult = CV.FindCuttingPoint(textureResult);
+			Bitmap resultImage = textureResult.img.Resize(pictureBox.Width, pictureBox.Height, Inter.Linear, true).Bitmap;
 
-			double[,] xLocData = new double[1,result.LbpFactor.GetLength(1)];
-			for (int xLoc = 0; xLoc < result.LbpFactor.GetLength(1); xLoc++)
+			Bitmap newBitmap = new Bitmap(resultImage.Width, resultImage.Height);
+			Graphics g = Graphics.FromImage(newBitmap);
+			g.DrawImage(resultImage, 0, 0);
+			float FontSize = 20;
+			for (int i = 0; i < cuttingPointResult.Edges.Count; i++)
 			{
-				xLocData[0,xLoc] = 0;
-				for (int yLoc = 0; yLoc < result.LbpFactor.GetLength(0); yLoc++)
-				{
-					xLocData[0,xLoc] += (double) result.LbpFactor[yLoc, xLoc, 0]/256;
-				}
+				float location = (float) cuttingPointResult.Edges[i] / cuttingPointResult.Accuracy * newBitmap.Width;
+				g.DrawLine(new Pen(Color.DarkTurquoise, 4), location, 0 * newBitmap.Height, location, 1 * newBitmap.Height);
 			}
+			g.Dispose();
 
-			ZedGraphForm graph = new ZedGraphForm(xLocData);
-			graph.Show();
+			pictureBox.Image = newBitmap;
 		}
 		#endregion
 

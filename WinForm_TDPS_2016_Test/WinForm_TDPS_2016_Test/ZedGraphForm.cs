@@ -13,18 +13,46 @@ namespace WinForm_TDPS_2016_Test
 {
 	public partial class ZedGraphForm : Form
 	{
-		private double[,] DataSet;
+		private enum StorageState
+		{
+			Null, ArrayDouble, ListDouble
+		};
+
+		private StorageState nowState;
+		private double[,] dataSet;
+		private List<double[]> dataList;
 		private GraphPane myPane;
 
 		public ZedGraphForm(double[,] argData)
 		{
 			InitializeComponent();
 
+			nowState = StorageState.ArrayDouble;
 			for (int i = 0; i < argData.GetLength(0); i++)
 			{
 				comboBoxDataSelect.Items.Add(string.Format("Data Set: {0:D}", i));
 			}
-			DataSet = argData;
+			dataSet = argData;
+			myPane = zedGraphTable.GraphPane;
+			myPane.Title.Text = "X - Y";
+			myPane.XAxis.Title.Text = "Point";
+			myPane.YAxis.Title.Text = "Value";
+			if (comboBoxDataSelect.Items.Count == 1)
+			{
+				comboBoxDataSelect.SelectedIndex = 0;
+			}
+		}
+
+		public ZedGraphForm(List<double[]> argData)
+		{
+			InitializeComponent();
+
+			nowState = StorageState.ListDouble;
+			for (int i = 0; i < argData.Count; i++)
+			{
+				comboBoxDataSelect.Items.Add(string.Format("Data Set: {0:D}", i));
+			}
+			dataList = argData;
 			myPane = zedGraphTable.GraphPane;
 			myPane.Title.Text = "X - Y";
 			myPane.XAxis.Title.Text = "Point";
@@ -42,26 +70,40 @@ namespace WinForm_TDPS_2016_Test
 
 		#region Func
 
-		private void FlashData()
+		private void ClearGraph()
 		{
-			int selectedValue = comboBoxDataSelect.SelectedIndex;
-
-			// Make up some data arrays based on the Sine function
-			PointPairList list = new PointPairList();
-			for (int i = 0; i < DataSet.GetLength(1); i++)
-			{
-				list.Add(i, DataSet[selectedValue, i]);
-			}
-
 			for (int i = 0; i < myPane.CurveList.Count; i++)
 			{
 				myPane.CurveList[i].Clear();
 			}
-			
-			// Generate a blue curve with circle
-			// symbols, and "Piper" in the legend
-			LineItem myCurve = myPane.AddCurve(String.Empty, list, Color.Blue, SymbolType.Circle);
+		}
 
+		private void FlashData()
+		{
+			PointPairList list = new PointPairList();
+			if (nowState == StorageState.ArrayDouble)
+			{
+				int selectedValue = comboBoxDataSelect.SelectedIndex;
+				for (int i = 0; i < dataSet.GetLength(1); i++)
+				{
+					list.Add(i, dataSet[selectedValue, i]);
+				}
+			}
+			else if (nowState == StorageState.ListDouble)
+			{
+				int selectedValue = comboBoxDataSelect.SelectedIndex;
+				double[] value = dataList[selectedValue];
+				for (int i = 0; i < value.Length; i++)
+				{
+					list.Add(i, value[i]);
+				}
+			}
+			else
+			{
+				
+			}
+			ClearGraph();
+			LineItem myCurve = myPane.AddCurve(String.Empty, list, Color.Blue, SymbolType.Circle);
 			myPane.AxisChange();
 			Refresh();
 		}
