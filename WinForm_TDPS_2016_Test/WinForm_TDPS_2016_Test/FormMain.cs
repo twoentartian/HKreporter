@@ -14,7 +14,11 @@ using Emgu.Util;
 using System.Threading;
 using System.Windows.Forms.VisualStyles;
 using AForge.Controls;
+using AForgeVideoSourceDevice;
 using Emgu.CV.CvEnum;
+
+using StateManagerSpace;
+using TempFileManagerSpacce;
 
 namespace WinForm_TDPS_2016_Test
 {
@@ -123,7 +127,6 @@ namespace WinForm_TDPS_2016_Test
 			Bitmap newBitmap = new Bitmap(resultImage.Width, resultImage.Height);
 			Graphics g = Graphics.FromImage(newBitmap);
 			g.DrawImage(resultImage, 0, 0);
-			float FontSize = 20;
 			for (int i = 0; i < cuttingPointResult.Edges.Count; i++)
 			{
 				float location = (float)cuttingPointResult.Edges[i] / cuttingPointResult.Accuracy * newBitmap.Width;
@@ -136,23 +139,12 @@ namespace WinForm_TDPS_2016_Test
 
 		private void buttonDebug_Click(object sender, EventArgs e)
 		{
-			string debugPath = Environment.CurrentDirectory + Path.DirectorySeparatorChar + "DEBUG" + Path.DirectorySeparatorChar + "DEBUG1.jpg";
-			TextureAnalysisResult textureResult = CV.TextureAnalysis(debugPath);
-			FindCuttingPointResult cuttingPointResult = CV.FindCuttingPoint(textureResult);
-			Bitmap resultImage = textureResult.img.Resize(pictureBox.Width, pictureBox.Height, Inter.Linear, true).Bitmap;
+			Debug.Debug1();
+		}
 
-			Bitmap newBitmap = new Bitmap(resultImage.Width, resultImage.Height);
-			Graphics g = Graphics.FromImage(newBitmap);
-			g.DrawImage(resultImage, 0, 0);
-			float FontSize = 20;
-			for (int i = 0; i < cuttingPointResult.Edges.Count; i++)
-			{
-				float location = (float) cuttingPointResult.Edges[i] / cuttingPointResult.Accuracy * newBitmap.Width;
-				g.DrawLine(new Pen(Color.DarkTurquoise, 4), location, 0 * newBitmap.Height, location, 1 * newBitmap.Height);
-			}
-			g.Dispose();
-
-			pictureBox.Image = newBitmap;
+		private void buttonDebug2_Click(object sender, EventArgs e)
+		{
+			Debug.Debug2();
 		}
 		#endregion
 

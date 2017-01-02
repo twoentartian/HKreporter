@@ -35,14 +35,15 @@
 			this.pictureBox = new AForge.Controls.PictureBox();
 			this.buttonSample = new System.Windows.Forms.Button();
 			this.buttonDebug = new System.Windows.Forms.Button();
+			this.buttonDebug2 = new System.Windows.Forms.Button();
 			((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// buttonBeginEnd
 			// 
-			this.buttonBeginEnd.Location = new System.Drawing.Point(411, 64);
+			this.buttonBeginEnd.Location = new System.Drawing.Point(411, 69);
 			this.buttonBeginEnd.Name = "buttonBeginEnd";
-			this.buttonBeginEnd.Size = new System.Drawing.Size(75, 23);
+			this.buttonBeginEnd.Size = new System.Drawing.Size(75, 25);
 			this.buttonBeginEnd.TabIndex = 0;
 			this.buttonBeginEnd.Text = "Start";
 			this.buttonBeginEnd.UseVisualStyleBackColor = true;
@@ -50,9 +51,9 @@
 			// 
 			// videoSourcePlayer
 			// 
-			this.videoSourcePlayer.Location = new System.Drawing.Point(12, 12);
+			this.videoSourcePlayer.Location = new System.Drawing.Point(12, 13);
 			this.videoSourcePlayer.Name = "videoSourcePlayer";
-			this.videoSourcePlayer.Size = new System.Drawing.Size(393, 291);
+			this.videoSourcePlayer.Size = new System.Drawing.Size(393, 315);
 			this.videoSourcePlayer.TabIndex = 3;
 			this.videoSourcePlayer.Text = "videoSourcePlayer1";
 			this.videoSourcePlayer.VideoSource = null;
@@ -61,9 +62,9 @@
 			// 
 			this.comboBoxCaptureDevice.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboBoxCaptureDevice.FormattingEnabled = true;
-			this.comboBoxCaptureDevice.Location = new System.Drawing.Point(411, 12);
+			this.comboBoxCaptureDevice.Location = new System.Drawing.Point(411, 13);
 			this.comboBoxCaptureDevice.Name = "comboBoxCaptureDevice";
-			this.comboBoxCaptureDevice.Size = new System.Drawing.Size(174, 20);
+			this.comboBoxCaptureDevice.Size = new System.Drawing.Size(174, 21);
 			this.comboBoxCaptureDevice.TabIndex = 4;
 			this.comboBoxCaptureDevice.TextChanged += new System.EventHandler(this.comboBoxCaptureDevice_TextChanged);
 			// 
@@ -71,25 +72,25 @@
 			// 
 			this.comboBoxCaptureResolution.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
 			this.comboBoxCaptureResolution.FormattingEnabled = true;
-			this.comboBoxCaptureResolution.Location = new System.Drawing.Point(411, 38);
+			this.comboBoxCaptureResolution.Location = new System.Drawing.Point(411, 41);
 			this.comboBoxCaptureResolution.Name = "comboBoxCaptureResolution";
-			this.comboBoxCaptureResolution.Size = new System.Drawing.Size(174, 20);
+			this.comboBoxCaptureResolution.Size = new System.Drawing.Size(174, 21);
 			this.comboBoxCaptureResolution.TabIndex = 5;
 			// 
 			// pictureBox
 			// 
 			this.pictureBox.Image = null;
-			this.pictureBox.Location = new System.Drawing.Point(591, 12);
+			this.pictureBox.Location = new System.Drawing.Point(591, 13);
 			this.pictureBox.Name = "pictureBox";
-			this.pictureBox.Size = new System.Drawing.Size(393, 291);
+			this.pictureBox.Size = new System.Drawing.Size(393, 315);
 			this.pictureBox.TabIndex = 6;
 			this.pictureBox.TabStop = false;
 			// 
 			// buttonSample
 			// 
-			this.buttonSample.Location = new System.Drawing.Point(492, 64);
+			this.buttonSample.Location = new System.Drawing.Point(492, 69);
 			this.buttonSample.Name = "buttonSample";
-			this.buttonSample.Size = new System.Drawing.Size(93, 23);
+			this.buttonSample.Size = new System.Drawing.Size(93, 25);
 			this.buttonSample.TabIndex = 7;
 			this.buttonSample.Text = "Sample";
 			this.buttonSample.UseVisualStyleBackColor = true;
@@ -97,19 +98,30 @@
 			// 
 			// buttonDebug
 			// 
-			this.buttonDebug.Location = new System.Drawing.Point(411, 280);
+			this.buttonDebug.Location = new System.Drawing.Point(411, 303);
 			this.buttonDebug.Name = "buttonDebug";
-			this.buttonDebug.Size = new System.Drawing.Size(75, 23);
+			this.buttonDebug.Size = new System.Drawing.Size(75, 25);
 			this.buttonDebug.TabIndex = 8;
 			this.buttonDebug.Text = "Debug";
 			this.buttonDebug.UseVisualStyleBackColor = true;
 			this.buttonDebug.Click += new System.EventHandler(this.buttonDebug_Click);
 			// 
+			// buttonDebug2
+			// 
+			this.buttonDebug2.Location = new System.Drawing.Point(492, 303);
+			this.buttonDebug2.Name = "buttonDebug2";
+			this.buttonDebug2.Size = new System.Drawing.Size(75, 25);
+			this.buttonDebug2.TabIndex = 9;
+			this.buttonDebug2.Text = "Debug2";
+			this.buttonDebug2.UseVisualStyleBackColor = true;
+			this.buttonDebug2.Click += new System.EventHandler(this.buttonDebug2_Click);
+			// 
 			// FormMain
 			// 
-			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
+			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(1153, 376);
+			this.ClientSize = new System.Drawing.Size(1153, 407);
+			this.Controls.Add(this.buttonDebug2);
 			this.Controls.Add(this.buttonDebug);
 			this.Controls.Add(this.buttonSample);
 			this.Controls.Add(this.pictureBox);
@@ -136,6 +148,7 @@
 		private AForge.Controls.PictureBox pictureBox;
 		private System.Windows.Forms.Button buttonSample;
 		private System.Windows.Forms.Button buttonDebug;
+		private System.Windows.Forms.Button buttonDebug2;
 	}
 }
 

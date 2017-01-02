@@ -47,3 +47,7 @@ D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\bin\Debug\AForge.
 D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\obj\Debug\WinForm_TDPS_2016_Test.csprojResolveAssemblyReference.cache
 D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\obj\Debug\WinForm_TDPS_2016_Test.FormMain.resources
 D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\obj\Debug\WinForm_TDPS_2016_Test.ZedGraphForm.resources
+D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\bin\Debug\AForge.Genetic.dll
+D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\bin\Debug\AForge.Neuro.dll
+D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\bin\Debug\AForge.Genetic.xml
+D:\TYD\C Program\WinForm_TDPS_2016_Test\WinForm_TDPS_2016_Test\bin\Debug\AForge.Neuro.xml

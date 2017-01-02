@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace WinForm_TDPS_2016_Test
+namespace TempFileManagerSpacce
 {
 	class TempFileManager
 	{

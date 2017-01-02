@@ -4,8 +4,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AForge.Video.DirectShow;
+using AForgeVideoSourceDevice;
+using WinForm_TDPS_2016_Test;
 
-namespace WinForm_TDPS_2016_Test
+namespace StateManagerSpace
 {
 	class StateManager
 	{
