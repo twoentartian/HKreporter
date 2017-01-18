@@ -18,7 +18,9 @@ using AForgeVideoSourceDevice;
 using Emgu.CV.CvEnum;
 
 using StateManagerSpace;
-using TempFileManagerSpacce;
+using TempFileManagerSpace;
+using TcpIpFileManagerSpace;
+using WinForm_TDPS_2016_TCPIP;
 
 namespace WinForm_TDPS_2016_Test
 {
@@ -26,14 +28,18 @@ namespace WinForm_TDPS_2016_Test
 	{
 		private StateManager stateManager;
 		private TempFileManager tempFileManager;
+		private TcpIpFileManager tcpIpFileManager;
+		private Server TcpIpServer;
 
 		#region Singleton
 
 		protected FormMain()
 		{
 			InitializeComponent();
+			Control.CheckForIllegalCrossThreadCalls = false;
 			stateManager = StateManager.GetInstance();
 			tempFileManager = TempFileManager.GetInstance();
+			tcpIpFileManager = TcpIpFileManager.GetInstance();
 		}
 
 		public static FormMain GetInstance()
@@ -77,14 +83,26 @@ namespace WinForm_TDPS_2016_Test
 			return pictureBox;
 		}
 
+		public System.Windows.Forms.PictureBox GetPictureBoxTcpIp()
+		{
+			return pictureBoxTcpIp;
+		}
+
 		#endregion
 
 		#region Form
 
 		private void FormMain_Load(object sender, EventArgs e)
 		{
+			DoubleBuffered = true;
 			stateManager.Init();
 			tempFileManager.Init();
+			tcpIpFileManager.Init();
+
+			TcpIpServer = Server.GetInstance();
+			TcpIpServer.StartListen();
+
+			BroadcastService.GetInstance().StartBroadcast();
 		}
 
 		private void FormMain_FormClosing(object sender, FormClosingEventArgs e)
@@ -95,7 +113,7 @@ namespace WinForm_TDPS_2016_Test
 
 		private void FormMain_FormClosed(object sender, FormClosedEventArgs e)
 		{
-
+			Application.Exit();
 		}
 		#endregion
 
@@ -121,7 +139,7 @@ namespace WinForm_TDPS_2016_Test
 			Image tempImage = videoSourcePlayer.GetCurrentVideoFrame();
 			string tempPath = tempFileManager.AddTempFile(tempImage);
 			TextureAnalysisResult textureResult = CV.TextureAnalysis(tempPath);
-			FindCuttingPointResult cuttingPointResult = CV.FindCuttingPoint(textureResult);
+			FindCuttingPointResult cuttingPointResult = CV.FindCuttingPoint(textureResult, CV.FindCuttingPointMode.MaximumMethod);
 			Bitmap resultImage = textureResult.img.Resize(pictureBox.Width, pictureBox.Height, Inter.Linear, true).Bitmap;
 
 			Bitmap newBitmap = new Bitmap(resultImage.Width, resultImage.Height);
@@ -130,7 +148,7 @@ namespace WinForm_TDPS_2016_Test
 			for (int i = 0; i < cuttingPointResult.Edges.Count; i++)
 			{
 				float location = (float)cuttingPointResult.Edges[i] / cuttingPointResult.Accuracy * newBitmap.Width;
-				g.DrawLine(new Pen(Color.DarkTurquoise, 4), location, 0 * newBitmap.Height, location, 1 * newBitmap.Height);
+				g.DrawLine(new Pen(Color.Red, 4), location, 0 * newBitmap.Height, location, 1 * newBitmap.Height);
 			}
 			g.Dispose();
 
@@ -146,6 +164,12 @@ namespace WinForm_TDPS_2016_Test
 		{
 			Debug.Debug2();
 		}
+		#endregion
+
+		#region Label
+
+		public Label LabelUDP => labelUdp;
+
 		#endregion
 
 		#region ComboBox

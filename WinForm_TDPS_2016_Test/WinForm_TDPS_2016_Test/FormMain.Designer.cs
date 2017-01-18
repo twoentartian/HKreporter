@@ -36,7 +36,10 @@
 			this.buttonSample = new System.Windows.Forms.Button();
 			this.buttonDebug = new System.Windows.Forms.Button();
 			this.buttonDebug2 = new System.Windows.Forms.Button();
+			this.labelUdp = new System.Windows.Forms.Label();
+			this.pictureBoxTcpIp = new System.Windows.Forms.PictureBox();
 			((System.ComponentModel.ISupportInitialize)(this.pictureBox)).BeginInit();
+			((System.ComponentModel.ISupportInitialize)(this.pictureBoxTcpIp)).BeginInit();
 			this.SuspendLayout();
 			// 
 			// buttonBeginEnd
@@ -116,11 +119,30 @@
 			this.buttonDebug2.UseVisualStyleBackColor = true;
 			this.buttonDebug2.Click += new System.EventHandler(this.buttonDebug2_Click);
 			// 
+			// labelUdp
+			// 
+			this.labelUdp.AutoSize = true;
+			this.labelUdp.Location = new System.Drawing.Point(12, 331);
+			this.labelUdp.Name = "labelUdp";
+			this.labelUdp.Size = new System.Drawing.Size(33, 13);
+			this.labelUdp.TabIndex = 10;
+			this.labelUdp.Text = "UDP:";
+			// 
+			// pictureBoxTcpIp
+			// 
+			this.pictureBoxTcpIp.Location = new System.Drawing.Point(12, 13);
+			this.pictureBoxTcpIp.Name = "pictureBoxTcpIp";
+			this.pictureBoxTcpIp.Size = new System.Drawing.Size(393, 315);
+			this.pictureBoxTcpIp.TabIndex = 11;
+			this.pictureBoxTcpIp.TabStop = false;
+			// 
 			// FormMain
 			// 
 			this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
 			this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-			this.ClientSize = new System.Drawing.Size(1153, 407);
+			this.ClientSize = new System.Drawing.Size(1241, 407);
+			this.Controls.Add(this.pictureBoxTcpIp);
+			this.Controls.Add(this.labelUdp);
 			this.Controls.Add(this.buttonDebug2);
 			this.Controls.Add(this.buttonDebug);
 			this.Controls.Add(this.buttonSample);
@@ -129,13 +151,17 @@
 			this.Controls.Add(this.comboBoxCaptureDevice);
 			this.Controls.Add(this.videoSourcePlayer);
 			this.Controls.Add(this.buttonBeginEnd);
+			this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
+			this.MaximizeBox = false;
 			this.Name = "FormMain";
 			this.Text = "Meepo";
 			this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.FormMain_FormClosing);
 			this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.FormMain_FormClosed);
 			this.Load += new System.EventHandler(this.FormMain_Load);
 			((System.ComponentModel.ISupportInitialize)(this.pictureBox)).EndInit();
+			((System.ComponentModel.ISupportInitialize)(this.pictureBoxTcpIp)).EndInit();
 			this.ResumeLayout(false);
+			this.PerformLayout();
 
 		}
 
@@ -149,6 +175,8 @@
 		private System.Windows.Forms.Button buttonSample;
 		private System.Windows.Forms.Button buttonDebug;
 		private System.Windows.Forms.Button buttonDebug2;
+		private System.Windows.Forms.Label labelUdp;
+		private System.Windows.Forms.PictureBox pictureBoxTcpIp;
 	}
 }
 

@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 
-namespace TempFileManagerSpacce
+namespace TempFileManagerSpace
 {
 	class TempFileManager
 	{
@@ -69,7 +69,7 @@ namespace TempFileManagerSpacce
 				}
 			}
 			FileStream fs = File.Create(tempFilePath);
-			argImage.Save(fs, ImageFormat.Bmp);
+			argImage.Save(fs, ImageFormat.Jpeg);
 			fs.Close();
 			return tempFilePath;
 		}

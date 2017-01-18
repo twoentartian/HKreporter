@@ -109,8 +109,6 @@ namespace WinForm_TDPS_2016_Test
 	}
 	#endregion
 
-
-
 	static class CV
 	{
 		#region CV Arguements
@@ -118,14 +116,24 @@ namespace WinForm_TDPS_2016_Test
 		public enum DetectMode
 		{
 			NoCircle,
-			includeCircle
+			IncludeCircle
+		}
+
+		public enum FindCuttingPointMode
+		{
+			ThresholdMethod,
+			MaximumMethod
 		}
 
 		private static readonly int ThresholdAveGrayCounter = 40;
 		private static readonly int AccurateLevel = 100;
 		private static readonly double CuttingEdgeFactor = 3; //Determine the threshold of edge
-		private static readonly double EdgeMin = 0.25;
-		private static readonly double EdgeMax = 0.75;
+
+		private static readonly int MinimumEdges = 2;
+		private static readonly double EdgeFactorStepDown = 0.1; //Decrease EdgeFactor by this value in each step
+
+		private static readonly double EdgeMin = 0.2;
+		private static readonly double EdgeMax = 0.8;
 		#endregion
 
 		#region Func
@@ -141,7 +149,7 @@ namespace WinForm_TDPS_2016_Test
 			}
 		}
 
-		private static List<int> FindCutting(double[] input)
+		private static List<int> FindCutting(double[] input, double cuttingEdgeFactor)
 		{
 			List<int> output = new List<int>();
 			double[] slope = new double[input.Length - 1];
@@ -154,9 +162,12 @@ namespace WinForm_TDPS_2016_Test
 			ave = ave / slope.Length;
 			for (int i = 0; i < slope.Length - 1; i++)
 			{
-				if (slope[i] > CuttingEdgeFactor * ave)
+				if (i > AccurateLevel * EdgeMin && i < AccurateLevel * EdgeMax)
 				{
-					output.Add(i);
+					if (slope[i] > cuttingEdgeFactor * ave)
+					{
+						output.Add(i);
+					}
 				}
 			}
 			return output;
@@ -164,7 +175,7 @@ namespace WinForm_TDPS_2016_Test
 		#endregion
 
 		#region Static CV Functions
-		public static DetectResult Detect(string argPath, DetectMode argDetectMode)
+		public static DetectResult Detect(string argPath, DetectMode argtMode)
 		{
 			StringBuilder msgBuilder = new StringBuilder("Performance: ");
 
@@ -187,7 +198,7 @@ namespace WinForm_TDPS_2016_Test
 			CircleF[] circles = null;
 			Stopwatch watch = new Stopwatch();
 			double cannyThreshold = 180.0;
-			if (argDetectMode == DetectMode.includeCircle)
+			if (argtMode == DetectMode.IncludeCircle)
 			{
 				watch = Stopwatch.StartNew();
 				double circleAccumulatorThreshold = 120;
@@ -305,7 +316,7 @@ namespace WinForm_TDPS_2016_Test
 			return new TextureAnalysisResult(outputResult);
 		}
 
-		public static FindCuttingPointResult FindCuttingPoint(TextureAnalysisResult argTextureAnalysisResult)
+		public static FindCuttingPointResult FindCuttingPoint(TextureAnalysisResult argTextureAnalysisResult, FindCuttingPointMode argMode)
 		{
 			double[,] grayCounter = new double[Byte.MaxValue + 1, argTextureAnalysisResult.LbpFactor.GetLength(1)];
 			for (int xLoc = 0; xLoc < argTextureAnalysisResult.LbpFactor.GetLength(1); xLoc++)
@@ -316,19 +327,42 @@ namespace WinForm_TDPS_2016_Test
 				}
 			}
 
+			double[] ave = new double[grayCounter.GetLength(0)];
+			int maxAveLoc = 0;
+			double maxAve = 0;
+			for (int tempGray = 0; tempGray < grayCounter.GetLength(0); tempGray++)
+			{
+				ave[tempGray] = 0;
+				for (int xLoc = 0; xLoc < grayCounter.GetLength(1); xLoc++)
+				{
+					ave[tempGray] += grayCounter[tempGray, xLoc];
+				}
+				ave[tempGray] = ave[tempGray] / grayCounter.GetLength(1);
+
+				//Find Maximum
+				if (ave[tempGray] > maxAve)
+				{
+					maxAve = ave[tempGray];
+					maxAveLoc = tempGray;
+				}
+			}
+
+			//Gray Counter
 			List<double[]> smoothGrayCounterList = new List<double[]>();
 			for (int tempGray = 0; tempGray < grayCounter.GetLength(0); tempGray++)
 			{
-				double ave = 0;
-				for (int xLoc = 0; xLoc < grayCounter.GetLength(1); xLoc++)
-				{
-					ave += grayCounter[tempGray, xLoc];
-				}
-				ave = ave / grayCounter.GetLength(1);
-				if (ave < ThresholdAveGrayCounter)
+				//Threshold method
+				if (ave[tempGray] < ThresholdAveGrayCounter && argMode == FindCuttingPointMode.ThresholdMethod)
 				{
 					continue;
 				}
+
+				//Maximum Method
+				if (tempGray != maxAveLoc && argMode == FindCuttingPointMode.MaximumMethod)
+				{
+					continue;
+				}
+
 
 				double[] grayCounterForList = new double[AccurateLevel];
 				double[] max = new double[AccurateLevel];
@@ -358,57 +392,47 @@ namespace WinForm_TDPS_2016_Test
 				}
 				smoothGrayCounterList.Add(grayCounterForList);
 			}
+
+			//Edge Finding
+			double EdgeFactor = CuttingEdgeFactor;
 			List<int> edges = new List<int>();
 			for (int i = 0; i < smoothGrayCounterList.Count; i++)
 			{
-				List<int> resultList = FindCutting(smoothGrayCounterList[i]);
+				List<int> resultList;
+				while (true)
+				{
+					resultList = FindCutting(smoothGrayCounterList[i], EdgeFactor);
+					if (resultList.Count >= 2 )
+					{
+						break;
+					}
+					else
+					{
+						resultList.Clear();
+						EdgeFactor -= EdgeFactorStepDown;
+					}
+				}
 				foreach (var singleResult in resultList)
 				{
-					if (singleResult > AccurateLevel * EdgeMin && singleResult < AccurateLevel * EdgeMax)
+					bool sameSign = false;
+					foreach (var singleEdge in edges)
 					{
-						bool sameSign = false;
-						foreach (var singleEdge in edges)
+						if (singleEdge == singleResult)
 						{
-							if (singleEdge == singleResult)
-							{
-								sameSign = true;
-								break;
-							}
+							sameSign = true;
+							break;
 						}
-						if (!sameSign)
-						{
-							edges.Add(singleResult);
-						}
+					}
+					if (!sameSign)
+					{
+						edges.Add(singleResult);
 					}
 				}
 			}
-
+			
 			return new FindCuttingPointResult(grayCounter, smoothGrayCounterList, edges, AccurateLevel);
 		}
 
-		public static FindCuttingPointResult FindCuttingPoint_New(TextureAnalysisResult argTextureAnalysisResult)
-		{
-			double[,] grayCounter = new double[Byte.MaxValue + 1, argTextureAnalysisResult.LbpFactor.GetLength(1)];
-			for (int xLoc = 0; xLoc < argTextureAnalysisResult.LbpFactor.GetLength(1); xLoc++)
-			{
-				for (int yLoc = 0; yLoc < argTextureAnalysisResult.LbpFactor.GetLength(0); yLoc++)
-				{
-					grayCounter[argTextureAnalysisResult.LbpFactor[yLoc, xLoc, 0], xLoc]++;
-				}
-			}
-
-			List<double[]> smoothGrayCounterList = new List<double[]>();
-			for (int tempGray = 0; tempGray < grayCounter.GetLength(0); tempGray++)
-			{
-				double ave = 0;
-				for (int xLoc = 0; xLoc < grayCounter.GetLength(1); xLoc++)
-				{
-					ave += grayCounter[tempGray, xLoc];
-				}
-				ave = ave / grayCounter.GetLength(1);
-			}
-			return null;
-		}
 		#endregion
 	}
 }

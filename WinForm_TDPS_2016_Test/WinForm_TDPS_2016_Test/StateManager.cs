@@ -14,7 +14,7 @@ namespace StateManagerSpace
 		#region Singleton
 		protected StateManager()
 		{
-			Capture = new CaptureState();
+
 		}
 		private static StateManager _instance;
 		public static StateManager GetInstance()
@@ -24,16 +24,23 @@ namespace StateManagerSpace
 		#endregion
 
 		public CaptureState Capture;
+		public UdpState Udp;
 
 		public void Init()
 		{
+			Capture = new CaptureState();
+			Udp = new UdpState();
 			Capture.Init();
+			Udp.Init();
 		}
 	}
 
 	class State
 	{
-		
+		public virtual void Init()
+		{
+			
+		}
 	}
 
 	class CaptureState : State
@@ -43,7 +50,7 @@ namespace StateManagerSpace
 
 		}
 
-		public void Init()
+		public override void Init()
 		{
 			SetStop();
 			VideoSourceDevice.Scan();
@@ -76,6 +83,67 @@ namespace StateManagerSpace
 			FormMain.GetInstance().GetButton_BeginEnd().Text = "Start";
 			FormMain.GetInstance().GetButton_Sample().Enabled = false;
 			VideoSourceDevice.End();
+		}
+	}
+
+	class UdpState : State
+	{
+		public UdpState()
+		{
+			
+		}
+
+		public enum NowState
+		{
+			WaitForConnection, Connected, Close
+		}
+
+		private NowState _state = NowState.Close;
+
+		public override void Init()
+		{
+			SetUdpClose();
+			FormMain.GetInstance().LabelUDP.Text = "UDP: ";
+		}
+
+		public void SetUdpClose(string info = null)
+		{
+			_state = NowState.Close;
+			if (String.IsNullOrWhiteSpace(info))
+			{
+				FormMain.GetInstance().LabelUDP.Text = "UDP: Close";
+			}
+			else
+			{
+				FormMain.GetInstance().LabelUDP.Text = "UDP: Close Info: " + info;
+			}
+			
+		}
+
+		public void SetUdpFindClient(string info = null)
+		{
+			_state = NowState.Connected;
+			if (String.IsNullOrWhiteSpace(info))
+			{
+				FormMain.GetInstance().LabelUDP.Text = "UDP: Find client, waiting for data";
+			}
+			else
+			{
+				FormMain.GetInstance().LabelUDP.Text = "UDP: Find client, waiting for data Info: " + info;
+			}
+		}
+
+		public void SetUdpWaitForConnection(string info = null)
+		{
+			_state = NowState.WaitForConnection;
+			if (String.IsNullOrWhiteSpace(info))
+			{
+				FormMain.GetInstance().LabelUDP.Text = "UDP: Wait for connection";
+			}
+			else
+			{
+				FormMain.GetInstance().LabelUDP.Text = "UDP: Wait for connection Info: " + info;
+			}
 		}
 	}
 }

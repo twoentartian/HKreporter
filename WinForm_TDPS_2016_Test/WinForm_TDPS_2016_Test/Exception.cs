@@ -10,4 +10,9 @@ namespace WinForm_TDPS_2016_Test
 	{
 
 	}
+
+	class MultiIpV4AddressException: ApplicationException
+	{
+		
+	}
 }
